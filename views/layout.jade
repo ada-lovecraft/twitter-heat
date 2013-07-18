@@ -1,0 +1,21 @@
+doctype 5
+html
+  head
+    title Tweet of the Night
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet',href='http://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900')
+  body
+    block content
+  script(src='/socket.io/socket.io.js')
+  script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+  script(src='https://www.khronos.org/registry/webgl/sdk/debug/webgl-debug.js')
+  script(src='/javascripts/webgl-heatmap.js')
+  script(src='/javascripts/client.js')
+  script.
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-41145442-2', 'codevinsky.com');
+    ga('send', 'pageview');
