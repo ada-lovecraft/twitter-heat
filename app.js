@@ -43,10 +43,10 @@ app.get('/users', user.list);
 emitter.on('new city', getCityInfo);
 
 var twit = new twitter({
-	consumer_key: 'ftf8DUtrpa3TOSPjZBOIEQ',
-	consumer_secret: 'j9w4DhzvQ0dWFxQr5TqXh9NrhJcpX8UZ1bvGW1LY',
-	access_token_key: '845732328-14o53Xqi95T7wZ4EUDt9Lc7eNa8qBL7zMuzHskVg',
-	access_token_secret: 'OWNOwB7A2MzAmImhmxx5q1AWQPqWp3IsqLTqIZchdk'
+	consumer_key: 'oL9WYc0haBx8S8VmHBCTQ',
+	consumer_secret: '2Pfxk3sl9rhtbEtn4TUlUiR9NDlu7x0puuB4rihXbQ',
+	access_token_key: '845732328-HqzZS5itaQmsppAoR1VM14yhhIg7WsRepkhlBJTp',
+	access_token_secret: 'fPW3Tu0WCPSPK6DKZGqzD4reN1amq8XMydjPj5wbTs'
 });
 
 

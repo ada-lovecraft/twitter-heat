@@ -142,10 +142,9 @@ $(function() {
 	ctx.fillStyle = '#222222';
 
 	_.each(cities, function(city) {
-		var textSize = ctx.measureText(city.name);
 		var x = ((Math.ceil(city.location.lon + 124.848974)/58) * width) - (width * .025) ;
 		var y = Math.abs(((Math.ceil(city.location.lat - 24.396308) / 25) * height)-height) + (width * .025);
-		ctx.fillText(city.name,x,y);
+		ctx.fillText(city.name.toUpperCase(),x,y);
 		
 	})
 
