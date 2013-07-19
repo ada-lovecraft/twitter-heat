@@ -8,7 +8,8 @@
   "dependencies": {
     "express": "3.2.6",
     "jade": "*",
-    "ntwitter":"*",
-    "express.io":"*"
+    "ntwitter": "*",
+    "express.io": "*",
+    "dirty": "~0.9.7"
   }
 }

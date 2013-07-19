@@ -41,3 +41,14 @@ a {
 	letter-spacing: .1em;
 	font-weight: 300;
 }
+
+#labels {
+	position: absolute;
+	z-index:1000;
+}
+
+.city {
+	font-size: 10px;
+	font-weight: 300;
+	color: #333;
+}
