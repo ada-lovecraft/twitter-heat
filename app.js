@@ -14,8 +14,11 @@ var app = require('express.io')()
   , EventEmitter = require('events').EventEmitter
   , emitter = new EventEmitter()
   , totalTweets = 0
-  , totalErrors = 0;
+  , totalErrors = 0
+  , dbReady = false;
 
+var db = dirty('db/tweetcount.db')
+var cities = dirty('db/cities.db');
 
 
 
@@ -40,7 +43,6 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 app.get('/users', user.list);
 
-emitter.on('new city', getCityInfo);
 
 var twit = new twitter({
 	consumer_key: 'oL9WYc0haBx8S8VmHBCTQ',
@@ -55,27 +57,116 @@ twit.stream('statuses/filter', {locations: '-124.848974,24.396308,-66.885444,49.
 		totalTweets++;
 		try {
 			var dataObj = {
-				coords: data.coordinates.coordinates
-			}
+				coords: data.coordinates.coordinates,
+				intensity: getLocationIntensity(data.coordinates.coordinates),
+				location: getLocationName(data)
+			};
 			app.io.broadcast('tweet',dataObj);
 		} catch(e) {
-			
 		}
 			
 	});
 	stream.on('end', function(response) {
-		console.log('STREAM CLOSED: ' , response)
+		console.eroor('STREAM CLOSED: ' , response)
 	});
 	stream.on('destroy', function(response) {
 		console.log('STREAM DESTROYED: ', response)
 	})
 });
 
-function getCityInfo() {
+function getLocationName(data) {
 
+		if (data.place.place_type == "city") {
+			var lat = Math.floor(data.coordinates.coordinates[0]/5);
+			var lon = Math.floor(data.coordinates.coordinates[1]/5);
+			var location = cities.get(lat + ',' + lon) || {};
+			var previousOwner = {
+				name: null,
+				count: 0
+			};
+			var newOwner = {
+				name: null,
+				count: 0
+			};
+
+			if (!location.hasOwnProperty('cities')) {
+				console.log(location);
+				console.log('creating locatiion object')
+				location.cities = {};
+			}
+
+			try { 
+				Object.keys(location.cities).forEach(function(key) {
+					var city = location.cities[key];
+					if(city.count > previousOwner.count) 
+						previousOwner = city;
+				})
+				if (!location.cities.hasOwnProperty(data.place.full_name)) {
+					location.cities[data.place.full_name] =  { name: data.place.name, count: 1, location: [data.coordinates.coordinates[0],data.coordinates.coordinates[1]]};
+				} else {
+					location.cities[data.place.full_name].count++;
+				}
+
+				Object.keys(location.cities).forEach(function(key) {
+					var city = location.cities[key];
+					if(city.count > newOwner.count) {
+						newOwner = city;
+					}
+				})
+				
+
+				cities.set(lat + ',' + lon, location);
+				
+				return newOwner;
+
+
+
+			} catch(e) {
+				console.log('ERROR GETTING LOCATION NAME: ' ,e , location,r)
+				return null
+			}
+		} 
+		
+		return null;
+};
+
+
+function getLocationIntensity(coordinates) {
+		var lat = coordinates[0].toFixed(0);
+		var lon = coordinates[1].toFixed(0);
+		var location = db.get(lat + ',' + lon) || {};
+
+		if (!location.hasOwnProperty('total')) {
+			location.total = 0;
+		}
+
+
+		location.total++;
+		
+		var max = db.get('max') || 0;
+		var min = 9007199254740992;
+
+		var normMin = 0,
+			normMax = 1,
+			norm,
+			intensity;
+		
+		db.forEach(function(key,val) {
+			if (val.total < min)
+				min = val.total;
+		});
+
+		if (location.total > max) {
+			max = location.total;
+			db.set('max',max);
+		}
+
+		db.set(lat+ ',' + lon, location);
+		norm = normMin + ((parseInt(location.total) - min) * (normMax - normMin))/(max-min);
+		intensity = normMax - norm;
+		return intensity;
 }
 
-var db = dirty('locations.db')
 
 
 app.listen(app.get('port'));

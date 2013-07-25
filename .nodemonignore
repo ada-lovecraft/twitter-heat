@@ -1,3 +1,4 @@
 /vendor/*     # ignore all external submodules
 /public/*     # static files
 /views/*
+/db/*

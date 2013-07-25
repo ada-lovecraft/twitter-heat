@@ -6,11 +6,17 @@ body {
   padding: 0px;
   font: 14px "Roboto";
   font-weight: 300;
-  background: #000000;
+  background: #222;
 }
+
 
 a {
   color: #00B7FF;
+}
+
+
+.dg {
+	z-index: 2000 !important;
 }
 
 
