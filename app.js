@@ -15,12 +15,27 @@ var app = require('express.io')()
   , emitter = new EventEmitter()
   , totalTweets = 0
   , totalErrors = 0
-  , dbReady = false;
+  , tpm = 0
+  , minutes = 0
+  , dbReady = false
+  , fs = require('fs');
 
 var db = dirty('db/tweetcount.db')
 var cities = dirty('db/cities.db');
+var densities = dirty('db/densities.db');
+var normalized = dirty('db/normalized.db');
 
+fs.watchFile('db/cities.db', function () {
+    fs.stat('db/cities.db', function (err, stats) {
+    	console.log('cities size: ' , stats.size)
+        if (stats.size > 2000000000)
+        	fs.unlink('db/cities.db', function(err) {
+        		if(err) throw err
+        		cities = dirty('db/cities.db')
+        	})
 
+    });
+});
 
 app.http().io();
 
@@ -41,6 +56,7 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
+app.get('/density', getPopulationDensity);
 app.get('/users', user.list);
 
 
@@ -53,6 +69,7 @@ var twit = new twitter({
 
 
 twit.stream('statuses/filter', {locations: '-124.848974,24.396308,-66.885444,49.384358' }, function(stream) {
+	setInterval(calculateTPM,60000);
 	stream.on('data',function(data) {
 		totalTweets++;
 		try {
@@ -61,10 +78,11 @@ twit.stream('statuses/filter', {locations: '-124.848974,24.396308,-66.885444,49.
 				intensity: getLocationIntensity(data.coordinates.coordinates),
 				location: getLocationName(data)
 			};
+			normalized.set(dataObj.location.name,dataObj.intensity);
 			app.io.broadcast('tweet',dataObj);
 		} catch(e) {
 		}
-			
+		db.set('total',totalTweets);
 	});
 	stream.on('end', function(response) {
 		console.eroor('STREAM CLOSED: ' , response)
@@ -90,8 +108,6 @@ function getLocationName(data) {
 			};
 
 			if (!location.hasOwnProperty('cities')) {
-				console.log(location);
-				console.log('creating locatiion object')
 				location.cities = {};
 			}
 
@@ -167,6 +183,19 @@ function getLocationIntensity(coordinates) {
 		return intensity;
 }
 
+function calculateTPM() {
+	minutes++;
+	tpm = totalTweets / minutes;
+	console.log('tpm:',tpm,' @ ',minutes,'minutes');
+}
 
+function getPopulationDensity() {
+	
+	var getNextDensity = function() {
+		
+	}
+
+	setInterval(getNextDensity,1000);
+}
 
 app.listen(app.get('port'));

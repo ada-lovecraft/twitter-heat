@@ -1,11 +1,19 @@
 $(function() {
 
+
+
 	var heatmap = null;
 	var cities = [];
 	var lineHeight = 12;
 	var listening = false;
 	var $canvas = null;
+	var midiReady = false;
+	var canAdd = true;
+	var totalTweets = 0;
 
+	MIDI.loadPlugin(function() {
+		midiReady = true
+	});
 	
 	var heatmapConfig = function() {
 		this.decay = 100;
@@ -19,6 +27,8 @@ $(function() {
 		this.cityColor = '#222222'
 		this.showLabels = true;
 		this.texture = 'classic';
+		this.normalize = false;
+		this.normalizeMax = 100;
 		this.height = $(window).height();
 		this.width = $(window).width();
 	};
@@ -100,11 +110,14 @@ $(function() {
 	gui.remember(config);
 
 	var labels = gui.addFolder('Label Options');
+	
+	
+	
 	var cityColor = labels.addColor(config,'cityColor')
 	var showLabels = labels.add(config,'showLabels');
+	
 	var tweets = gui.addFolder('Tweet Options');
 	var texture = tweets.add(config,'texture',['classic','ghost'])
-
 	tweets.add(config,'decay',0,1000);
 	tweets.add(config,'count',1,1000);
 	tweets.add(config,'spread',0,100);
@@ -113,6 +126,11 @@ $(function() {
 	tweets.add(config,'clamp').min(0).max(1).step(.05);
 	tweets.add(config,'blur');
 	tweets.add(config,'clear').listen();
+
+	var dataFolder = gui.addFolder('Data');
+	dataFolder.add(config,'normalizeMax',1,100);
+	dataFolder.add(config,'normalize');
+
 
 	showLabels.onChange(function(value) {
 		if (value == true) {
@@ -190,49 +208,60 @@ $(function() {
 	function listen() {
 		listening = true;
 		socket.on('tweet', function(data) {
-			
-			var y = Math.abs(((Math.ceil(data.coords[1] - 25) / 25) * config.height)-config.height);
-			var x = (Math.ceil(data.coords[0] + 124)/58) * config.width ;
+			if (canAdd) {
+				totalTweets++;
+				var y = Math.abs(((Math.ceil(data.coords[1] - 25) / 25) * config.height)-config.height);
+				var x = (Math.ceil(data.coords[0] + 124)/58) * config.width ;
 
-		    heatmap.addPoint(x,y, config.size, config.intensity);
+				var size = config.size;
+				if (config.normalize)
+					size = data.intensity * config.normalizeMax;
+			    heatmap.addPoint(x,y, size, config.intensity);
+			    /*
+			    if (midiReady) {
+			    	var note = Math.ceil(((x % 20) +50)/ 4.0) * 4;
+			    	console.log(note);
+			    	MIDI.noteOn(totalTweets % 16,note, size, 0); // plays note once loade
+			    }
+			    */
+			    var i = 0;
 
-		    var i = 0;
+		        while(i < config.count ){
+		            var xoff = Math.random()*2-1;
+		            var yoff = Math.random()*2-1;
+		            var l = xoff*xoff + yoff*yoff;
+		            if(l > 1){
+		                continue;
+		            }
+		            var ls = Math.sqrt(l);
+		            xoff/=ls; yoff/=ls;
+		            xoff*=1-l; yoff*=1-l;
+		            i += 1;
 
-	        while(i < config.count ){
-	            var xoff = Math.random()*2-1;
-	            var yoff = Math.random()*2-1;
-	            var l = xoff*xoff + yoff*yoff;
-	            if(l > 1){
-	                continue;
-	            }
-	            var ls = Math.sqrt(l);
-	            xoff/=ls; yoff/=ls;
-	            xoff*=1-l; yoff*=1-l;
-	            i += 1;
-	            heatmap.addPoint(x+xoff*config.spread, y+yoff* config.spread, config.size, config.intensity);
-	        }
-		    if (data.location !== null) {
-		    	var lat = Math.floor(data.coords[0]/5);
-			    var lon = Math.floor(data.coords[1]/5);
-			    var prevOwner = '';
-			    var city = {};
-			    if(_.indexOf(_.keys(cities),lat + ',' + lon) != -1) {
-			    	city = cities[lat + ',' + lon]
-			    	prevOwner = _.clone(city.owner);
-			    	city.owner = data.location.name
-			    	if (prevOwner !== city.owner) {
-			    		city.location = data.coords;
-			    		cities[lat + ',' + lon] = city;
-			    		updateCityNames();
-			    	}
-			    } else { 
-			    	city.owner = data.location.name;
-			    	city.location = data.coords;
-			    	cities[lat + ',' + lon] = city;
-			    	updateCityNames();
+		            heatmap.addPoint(x+xoff*config.spread, y+yoff* config.spread, config.size, config.intensity);
+		        }
+			    if (data.location !== null) {
+			    	var lat = Math.floor(data.coords[0]/5);
+				    var lon = Math.floor(data.coords[1]/5);
+				    var prevOwner = '';
+				    var city = {};
+				    if(_.indexOf(_.keys(cities),lat + ',' + lon) != -1) {
+				    	city = cities[lat + ',' + lon]
+				    	prevOwner = _.clone(city.owner);
+				    	city.owner = data.location.name
+				    	if (prevOwner !== city.owner) {
+				    		city.location = data.coords;
+				    		cities[lat + ',' + lon] = city;
+				    		updateCityNames();
+				    	}
+				    } else { 
+				    	city.owner = data.location.name;
+				    	city.location = data.coords;
+				    	cities[lat + ',' + lon] = city;
+				    	updateCityNames();
+				    }
 			    }
 		    }
-		    
 		})
 
 		$('#disconnect').click(function() {
@@ -246,6 +275,7 @@ $(function() {
 
 		var update = function() {
 			if (heatmap) {
+				canAdd = true;
 				if (!listening) {
 					listen();
 				}
@@ -266,6 +296,7 @@ $(function() {
 		 		console.log('no heatmap');
 		 	}
 		 	raf(update);
+
 
 		}
 		raf(update);
