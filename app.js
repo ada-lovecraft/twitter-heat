@@ -80,6 +80,7 @@ function startStream() {
 				};
 				normalized.set(dataObj.location.name,dataObj.intensity);
 				app.io.broadcast('tweet',dataObj);
+				console.log('tweet #', totalTweets)
 			} catch(e) {
 			}
 			db.set('total',totalTweets);
