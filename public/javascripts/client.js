@@ -7,13 +7,9 @@ $(function() {
 	var lineHeight = 12;
 	var listening = false;
 	var $canvas = null;
-	var midiReady = false;
 	var canAdd = true;
 	var totalTweets = 0;
 
-	MIDI.loadPlugin(function() {
-		midiReady = true
-	});
 	
 	var heatmapConfig = function() {
 		this.decay = 100;
@@ -217,13 +213,6 @@ $(function() {
 				if (config.normalize)
 					size = data.intensity * config.normalizeMax;
 			    heatmap.addPoint(x,y, size, config.intensity);
-			    /*
-			    if (midiReady) {
-			    	var note = Math.ceil(((x % 20) +50)/ 4.0) * 4;
-			    	console.log(note);
-			    	MIDI.noteOn(totalTweets % 16,note, size, 0); // plays note once loade
-			    }
-			    */
 			    var i = 0;
 
 		        while(i < config.count ){
