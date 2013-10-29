@@ -67,31 +67,32 @@ var twit = new twitter({
 	access_token_secret: 'fPW3Tu0WCPSPK6DKZGqzD4reN1amq8XMydjPj5wbTs'
 });
 
-
-twit.stream('statuses/filter', {locations: '-124.848974,24.396308,-66.885444,49.384358' }, function(stream) {
-	setInterval(calculateTPM,60000);
-	stream.on('data',function(data) {
-		totalTweets++;
-		try {
-			var dataObj = {
-				coords: data.coordinates.coordinates,
-				intensity: getLocationIntensity(data.coordinates.coordinates),
-				location: getLocationName(data)
-			};
-			normalized.set(dataObj.location.name,dataObj.intensity);
-			app.io.broadcast('tweet',dataObj);
-		} catch(e) {
-		}
-		db.set('total',totalTweets);
+function startStream() {
+	twit.stream('statuses/filter', {locations: '-124.848974,24.396308,-66.885444,49.384358' }, function(stream) {
+		setInterval(calculateTPM,60000);
+		stream.on('data',function(data) {
+			totalTweets++;
+			try {
+				var dataObj = {
+					coords: data.coordinates.coordinates,
+					intensity: getLocationIntensity(data.coordinates.coordinates),
+					location: getLocationName(data)
+				};
+				normalized.set(dataObj.location.name,dataObj.intensity);
+				app.io.broadcast('tweet',dataObj);
+			} catch(e) {
+			}
+			db.set('total',totalTweets);
+		});
+		stream.on('end', function(response) {
+			console.error('STREAM CLOSED: ' , response)
+			startStream()
+		});
+		stream.on('destroy', function(response) {
+			console.log('STREAM DESTROYED: ', response)
+		})
 	});
-	stream.on('end', function(response) {
-		console.eroor('STREAM CLOSED: ' , response)
-	});
-	stream.on('destroy', function(response) {
-		console.log('STREAM DESTROYED: ', response)
-	})
-});
-
+}
 function getLocationName(data) {
 
 		if (data.place.place_type == "city") {
@@ -199,3 +200,5 @@ function getPopulationDensity() {
 }
 
 app.listen(app.get('port'));
+
+startStream()
