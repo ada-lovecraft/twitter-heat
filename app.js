@@ -40,10 +40,10 @@ app.get('/', routes.index);
 
 
 var twit = new twitter({
-	consumer_key: 'oL9WYc0haBx8S8VmHBCTQ',
-	consumer_secret: '2Pfxk3sl9rhtbEtn4TUlUiR9NDlu7x0puuB4rihXbQ',
-	access_token_key: '845732328-HqzZS5itaQmsppAoR1VM14yhhIg7WsRepkhlBJTp',
-	access_token_secret: 'fPW3Tu0WCPSPK6DKZGqzD4reN1amq8XMydjPj5wbTs'
+	consumer_key: 'AH AH AH',
+	consumer_secret: 'YOU DIDNT SAY THE MAGIC WORD',
+	access_token_key: 'HEE HEE',
+	access_token_secret: 'CINNAMON BUNS'
 });
 
 function startStream() {
